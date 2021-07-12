@@ -5,9 +5,9 @@ import kotlinx.serialization.json.Json
 import me.qbosst.konfig.util.getSerialName
 import kotlin.reflect.KProperty
 
-sealed class DelegatedProperty<T>(val serializer: KSerializer<T>, _generate: T) {
+sealed class DelegatedConfigProperty<T>(val serializer: KSerializer<T>, _default: T) {
 
-    val generate by lazy { Json.encodeToJsonElement(serializer, _generate) }
+    val default by lazy { Json.encodeToJsonElement(serializer, _default) }
 
     abstract operator fun getValue(konfig: Konfig, property: KProperty<*>): T
 
@@ -17,10 +17,21 @@ sealed class DelegatedProperty<T>(val serializer: KSerializer<T>, _generate: T) 
     }
 }
 
-class RequiredProperty<T>(serializer: KSerializer<T>, generate: T): DelegatedProperty<T>(serializer, generate) {
+class RequiredConfigProperty<T>(
+    serializer: KSerializer<T>,
+    generate: T
+): DelegatedConfigProperty<T>(serializer, generate) {
     override fun getValue(konfig: Konfig, property: KProperty<*>): T {
         val propName = property.getSerialName()
         val jsonElement = konfig.map[propName] ?: error("Config value '$propName' is not present")
+        return Json.decodeFromJsonElement(serializer, jsonElement)
+    }
+}
+
+class DefaultingConfigProperty<T>(serializer: KSerializer<T>, default: T): DelegatedConfigProperty<T>(serializer, default) {
+    override fun getValue(konfig: Konfig, property: KProperty<*>): T {
+        val propName = property.getSerialName()
+        val jsonElement = konfig.map.getOrPut(propName, ::default)
         return Json.decodeFromJsonElement(serializer, jsonElement)
     }
 }
