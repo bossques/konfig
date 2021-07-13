@@ -5,7 +5,6 @@ import me.qbosst.konfig.engine.SerializationEngine
 import net.mamoe.yamlkt.Yaml
 import net.mamoe.yamlkt.YamlElement
 import net.mamoe.yamlkt.YamlNull
-import net.mamoe.yamlkt.toYamlElement
 
 class YamlEngine(override val engine: Yaml) : SerializationEngine<Yaml, YamlElement> {
     override val elementNull: YamlElement = YamlNull
@@ -21,7 +20,7 @@ class YamlEngine(override val engine: Yaml) : SerializationEngine<Yaml, YamlElem
     }
 
     override fun <T> encodeToElement(serializer: SerializationStrategy<T>, value: T): YamlElement {
-        return value.toYamlElement()
+        return engine.decodeYamlFromString(engine.encodeToString(serializer, value))
     }
 
     override fun <T> decodeFromElement(deserializer: DeserializationStrategy<T>, element: YamlElement): T {
