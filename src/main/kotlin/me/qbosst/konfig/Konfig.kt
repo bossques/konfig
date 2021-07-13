@@ -6,6 +6,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
+import me.qbosst.konfig.util.ConfigDefaults
 import me.qbosst.konfig.util.getSerialName
 import java.io.File
 import kotlin.reflect.KProperty1
@@ -96,7 +97,7 @@ open class Konfig(path: String) {
 }
 
 inline fun <reified T: Any> Konfig.required(
-    default: T,
+    default: T = ConfigDefaults[T::class],
     serializer: KSerializer<T> = T::class.serializer()
 ): RequiredConfigProperty<T> = RequiredConfigProperty(serializer, default)
 
@@ -116,12 +117,12 @@ inline fun <reified T: Any> Konfig.defaulting(
 ): DefaultingConfigProperty<T> = DefaultingConfigProperty(serializer, default)
 
 inline fun <reified T: Any> Konfig.optional(
-    default: T?,
+    default: T? = null,
     serializer: KSerializer<T> = T::class.serializer()
 ): OptionalConfigProperty<T?, T> = OptionalConfigProperty(serializer, default)
 
 inline fun <reified T: Any> Konfig.optional(
-    default: JsonElement = JsonNull,
+    default: JsonElement,
     serializer: KSerializer<T> = T::class.serializer()
 ): OptionalConfigProperty<T?, T> = OptionalConfigProperty(serializer, default)
 

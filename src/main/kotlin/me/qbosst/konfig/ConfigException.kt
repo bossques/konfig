@@ -1,5 +1,7 @@
 package me.qbosst.konfig
 
+import kotlin.reflect.KClass
+
 open class ConfigException: IllegalArgumentException {
     /**
      * Creates an instance of [ConfigException] without any details.
@@ -28,4 +30,8 @@ class ConfigPropertiesMissingException(val properties: List<String>): ConfigExce
 
 class ConfigPropertyMissingException(val property: String): ConfigException(
     message = "Config value '$property' is not present"
+)
+
+class DefaultNotRegistered(val kClass: KClass<out Any>): ConfigException(
+    message = "A default value for ${kClass.simpleName} has not been registered"
 )
