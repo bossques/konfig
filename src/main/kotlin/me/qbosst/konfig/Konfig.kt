@@ -37,7 +37,24 @@ open class Konfig(path: String) {
         }
 
         map = Json.decodeFromString(file.readText())
-        validate()
+
+        @Suppress("UNCHECKED_CAST")
+        runCatching { validate() }.onFailure { t ->
+            if(t is ConfigPropertiesMissingException) {
+                t.properties.forEach { propName ->
+                    val prop = getProperty(propName)!! as KProperty1<Konfig, *>
+
+                    prop.isAccessible = true
+                    val delegate = prop.getDelegate(this) as DelegatedConfigProperty<*>
+                    prop.isAccessible = false
+                    map[propName] = delegate.default
+                }
+
+                write()
+                return
+            }
+            throw t
+        }
     }
 
     fun write() {
@@ -60,12 +77,12 @@ open class Konfig(path: String) {
         }
 
         if(invalid.isNotEmpty()) {
-            throw IllegalStateException("The following config properties are missing: $invalid")
+            throw ConfigPropertiesMissingException(invalid)
         }
     }
 
     @Suppress("UNCHECKED_CAST")
-    internal fun getConfigProperties() = this::class.memberProperties.mapNotNull {
+    private fun getConfigProperties() = this::class.memberProperties.mapNotNull {
         val prop = it as KProperty1<Konfig, *>
         prop.isAccessible = true
         val delegate = prop.getDelegate(this) as? DelegatedConfigProperty<*> ?: return@mapNotNull null
@@ -73,31 +90,26 @@ open class Konfig(path: String) {
 
         return@mapNotNull prop to delegate
     }
+
+    private fun getProperty(name: String) = this::class.memberProperties.firstOrNull { it.getSerialName() == name }
 }
 
-/**
- * Creates a required config property.
- *
- * @param generate what to set this value as when generating a new config
- */
 inline fun <reified T: Any> Konfig.required(
-    generate: T,
+    default: T,
     serializer: KSerializer<T> = T::class.serializer()
-): RequiredConfigProperty<T> {
-    return RequiredConfigProperty(serializer, generate)
-}
+): RequiredConfigProperty<T> = RequiredConfigProperty(serializer, default)
 
-/**
- * Creates a defaulting config property.
- *
- * In the case of a config property not being present, it will use the [default] value
- *
- * @param default the default value that will be used if this config property is missing. This value will also be used
- * when a new config is generated.
- */
+inline fun <reified T: Any> Konfig.required(
+    default: JsonElement,
+    serializer: KSerializer<T> = T::class.serializer()
+): RequiredConfigProperty<T> = RequiredConfigProperty(serializer, default)
+
 inline fun <reified T: Any> Konfig.defaulting(
     default: T,
     serializer: KSerializer<T> = T::class.serializer()
-): DelegatedConfigProperty<T> {
-    return DefaultingConfigProperty(serializer, default)
-}
+): DefaultingConfigProperty<T> = DefaultingConfigProperty(serializer, default)
+
+inline fun <reified T: Any> Konfig.defaulting(
+    default: JsonElement,
+    serializer: KSerializer<T> = T::class.serializer()
+): DefaultingConfigProperty<T> = DefaultingConfigProperty(serializer, default)
