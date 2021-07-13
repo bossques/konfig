@@ -9,8 +9,8 @@ import net.mamoe.yamlkt.toYamlElement
 
 class YamlEngine(override val engine: Yaml) : SerializationEngine<Yaml, YamlElement> {
     override val elementNull: YamlElement = YamlNull
-    @OptIn(InternalSerializationApi::class)
-    override val elementSerializer: KSerializer<YamlElement> = YamlElement::class.serializer()
+
+    override val elementSerializer: KSerializer<YamlElement> = YamlElement.serializer()
 
     override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
         return engine.encodeToString(serializer, value)

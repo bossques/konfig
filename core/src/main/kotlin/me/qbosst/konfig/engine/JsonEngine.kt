@@ -8,8 +8,7 @@ import kotlinx.serialization.json.JsonNull
 class JsonEngine(override val engine: Json): SerializationEngine<Json, JsonElement> {
     override val elementNull: JsonElement = JsonNull
 
-    @OptIn(InternalSerializationApi::class)
-    override val elementSerializer: KSerializer<JsonElement> = JsonElement::class.serializer()
+    override val elementSerializer: KSerializer<JsonElement> = JsonElement.serializer()
 
     override fun <T> encodeToString(serializer: SerializationStrategy<T>, value: T): String {
         return engine.encodeToString(serializer, value)
