@@ -1,8 +1,5 @@
-@file:OptIn(InternalSerializationApi::class)
-
 package me.qbosst.konfig
 
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import me.qbosst.konfig.engine.SerializationEngine
@@ -32,34 +29,34 @@ abstract class Configurable<E: Any> {
 
 inline fun <reified T: Any, E: Any> Configurable<E>.required(
     default: T = ConfigDefaults[T::class],
-    serializer: KSerializer<T> = T::class.serializer()
+    serializer: KSerializer<T> = serializer()
 ): RequiredConfigProperty<T, *, E, *> = RequiredConfigProperty(default, serializer, serializationEngine)
 
 @JvmName("requiredElement")
 inline fun <reified T: Any, E: Any> Configurable<E>.required(
     default: E,
-    serializer: KSerializer<T> = T::class.serializer()
+    serializer: KSerializer<T> = serializer()
 ): RequiredConfigProperty<T, *, E, *> = RequiredConfigProperty(serializer, default, serializationEngine)
 
 inline fun <reified T: Any, E: Any> Configurable<E>.defaulting(
     default: T,
-    serializer: KSerializer<T> = T::class.serializer()
+    serializer: KSerializer<T> = serializer()
 ): DefaultingConfigProperty<T, *, E, *> = DefaultingConfigProperty(default, serializer, serializationEngine)
 
 @JvmName("defaultingElement")
 inline fun <reified T: Any, E: Any> Configurable<E>.defaulting(
     default: E,
-    serializer: KSerializer<T> = T::class.serializer()
+    serializer: KSerializer<T> = serializer()
 ): DefaultingConfigProperty<T, *, E, *> = DefaultingConfigProperty(serializer, default, serializationEngine)
 
 inline fun <reified T: Any, E: Any> Configurable<E>.optional(
     default: T? = null,
-    serializer: KSerializer<T> = T::class.serializer()
+    serializer: KSerializer<T> = serializer()
 ): OptionalConfigProperty<T?, T, *, E, *> = OptionalConfigProperty(default, serializer, serializationEngine)
 
 @JvmName("optionalElement")
 inline fun <reified T: Any, E: Any> Configurable<E>.optional(
     default: E,
-    serializer: KSerializer<T> = T::class.serializer()
+    serializer: KSerializer<T> = serializer()
 ): OptionalConfigProperty<T?, T, *, E, *> = OptionalConfigProperty(serializer, default, serializationEngine)
 
