@@ -5,6 +5,7 @@ package me.qbosst.konfig
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import me.qbosst.konfig.util.getSerialName
 import java.io.File
 import kotlin.reflect.KProperty1
@@ -45,7 +46,7 @@ open class Konfig(path: String) {
                     val prop = getProperty(propName)!! as KProperty1<Konfig, *>
 
                     prop.isAccessible = true
-                    val delegate = prop.getDelegate(this) as DelegatedConfigProperty<*>
+                    val delegate = prop.getDelegate(this) as DelegatedConfigProperty<out Any?, out Any>
                     prop.isAccessible = false
                     map[propName] = delegate.default
                 }
@@ -66,7 +67,7 @@ open class Konfig(path: String) {
 
         val invalid = mutableListOf<String>()
         for((prop, delegate) in getConfigProperties()) {
-            if (delegate !is RequiredConfigProperty) continue
+            if (delegate !is RequiredConfigProperty<out Any>) continue
 
             val propName = prop.getSerialName()
 
@@ -85,7 +86,7 @@ open class Konfig(path: String) {
     private fun getConfigProperties() = this::class.memberProperties.mapNotNull {
         val prop = it as KProperty1<Konfig, *>
         prop.isAccessible = true
-        val delegate = prop.getDelegate(this) as? DelegatedConfigProperty<*> ?: return@mapNotNull null
+        val delegate = prop.getDelegate(this) as? DelegatedConfigProperty<out Any?, out Any> ?: return@mapNotNull null
         prop.isAccessible = false
 
         return@mapNotNull prop to delegate
@@ -113,3 +114,14 @@ inline fun <reified T: Any> Konfig.defaulting(
     default: JsonElement,
     serializer: KSerializer<T> = T::class.serializer()
 ): DefaultingConfigProperty<T> = DefaultingConfigProperty(serializer, default)
+
+inline fun <reified T: Any> Konfig.optional(
+    default: T?,
+    serializer: KSerializer<T> = T::class.serializer()
+): OptionalConfigProperty<T?, T> = OptionalConfigProperty(serializer, default)
+
+inline fun <reified T: Any> Konfig.optional(
+    default: JsonElement = JsonNull,
+    serializer: KSerializer<T> = T::class.serializer()
+): OptionalConfigProperty<T?, T> = OptionalConfigProperty(serializer, default)
+

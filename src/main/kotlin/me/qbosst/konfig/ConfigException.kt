@@ -25,3 +25,7 @@ open class ConfigException: IllegalArgumentException {
 class ConfigPropertiesMissingException(val properties: List<String>): ConfigException(
     message = "The following config properties are required, but are missing: $properties"
 )
+
+class ConfigPropertyMissingException(val property: String): ConfigException(
+    message = "Config value '$property' is not present"
+)
