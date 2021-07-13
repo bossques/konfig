@@ -1,0 +1,7 @@
+[versions]
+kotlinx-serialization-json = "1.2.2"
+kotlinx-serialization-yaml = "0.10.0"
+
+[libraries]
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json"}
+kotlinx-serialization-yaml = { module = "net.mamoe.yamlkt:yamlkt", version.ref = "kotlinx-serialization-yaml" }

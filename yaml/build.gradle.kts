@@ -13,7 +13,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     compileOnly(project(":core"))
-    api("net.mamoe.yamlkt:yamlkt:0.10.0")
+    api(libs.kotlinx.serialization.yaml)
 
     testImplementation(project(":core"))
 }
