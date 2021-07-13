@@ -1,19 +1,21 @@
 package me.qbosst.konfig
 
 import kotlinx.serialization.*
+import kotlinx.serialization.builtins.MapEntrySerializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import me.qbosst.konfig.engine.SerializationEngine
 import me.qbosst.konfig.util.getSerialName
 import java.io.File
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-open class Konfig(path: String): Configurable() {
-    init {
-        require(path.endsWith(".json")) { "Path must point to a json file!" }
-    }
-
+open class Konfig<E: Any>(
+    path: String,
+    override val serializationEngine: SerializationEngine<*, E>,
+): Configurable<E>() {
     private val file: File = File(path)
     private var isInitialised: Boolean = false
 
@@ -23,8 +25,9 @@ open class Konfig(path: String): Configurable() {
         if(!file.exists()) {
             file.createNewFile()
 
-            map = mutableMapOf<String, JsonElement>().apply {
+            map = mutableMapOf<String, E>().apply {
                 for((prop, delegate) in getConfigProperties()) {
+                    delegate.default
                     put(prop.getSerialName(), delegate.default)
                 }
             }
@@ -33,16 +36,16 @@ open class Konfig(path: String): Configurable() {
             return
         }
 
-        map = Json.decodeFromString(file.readText())
+        map = read().toMutableMap()
 
         @Suppress("UNCHECKED_CAST")
         runCatching { validate() }.onFailure { t ->
             if(t is ConfigPropertiesMissingException) {
                 t.properties.forEach { propName ->
-                    val prop = getProperty(propName)!! as KProperty1<Konfig, *>
+                    val prop = getProperty(propName)!! as KProperty1<Configurable<*>, *>
 
                     prop.isAccessible = true
-                    val delegate = prop.getDelegate(this) as DelegatedConfigProperty<out Any?, out Any>
+                    val delegate = prop.getDelegate(this) as DelegatedConfigProperty<out Any?, out Any, *, E, *>
                     prop.isAccessible = false
                     map[propName] = delegate.default
                 }
@@ -54,8 +57,22 @@ open class Konfig(path: String): Configurable() {
         }
     }
 
+    @OptIn(InternalSerializationApi::class)
     fun write() {
-        file.writeText(Json.encodeToString(map))
+        val content = serializationEngine.engine.encodeToString(
+            MapSerializer(String::class.serializer(), serializationEngine.elementSerializer), map
+        )
+
+        file.writeText(content)
+    }
+
+    @OptIn(InternalSerializationApi::class)
+    fun read(): Map<String, E> {
+        val content = file.readText()
+
+        return serializationEngine.engine.decodeFromString(
+            MapSerializer(String::class.serializer(), serializationEngine.elementSerializer), content
+        )
     }
 
     fun validate() {
@@ -63,7 +80,7 @@ open class Konfig(path: String): Configurable() {
 
         val invalid = mutableListOf<String>()
         for((prop, delegate) in getConfigProperties()) {
-            if (delegate !is RequiredConfigProperty<out Any>) continue
+            if (delegate !is RequiredConfigProperty<out Any, *, E, *>) continue
 
             val propName = prop.getSerialName()
 
