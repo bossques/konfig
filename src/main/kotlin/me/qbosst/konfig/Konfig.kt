@@ -2,12 +2,9 @@
 
 package me.qbosst.konfig
 
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
+import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.serializer
 import me.qbosst.konfig.util.getSerialName
 import java.io.File
 import kotlin.reflect.KProperty1
@@ -84,9 +81,10 @@ open class Konfig(path: String) {
  * @param generate what to set this value as when generating a new config
  */
 inline fun <reified T: Any> Konfig.required(
-    generate: T
+    generate: T,
+    serializer: KSerializer<T> = T::class.serializer()
 ): RequiredConfigProperty<T> {
-    return RequiredConfigProperty(T::class.serializer(), generate)
+    return RequiredConfigProperty(serializer, generate)
 }
 
 /**
@@ -98,7 +96,8 @@ inline fun <reified T: Any> Konfig.required(
  * when a new config is generated.
  */
 inline fun <reified T: Any> Konfig.defaulting(
-    default: T
+    default: T,
+    serializer: KSerializer<T> = T::class.serializer()
 ): DelegatedConfigProperty<T> {
-    return DefaultingConfigProperty(T::class.serializer(), default)
+    return DefaultingConfigProperty(serializer, default)
 }
