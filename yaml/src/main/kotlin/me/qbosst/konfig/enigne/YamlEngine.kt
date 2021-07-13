@@ -6,7 +6,7 @@ import net.mamoe.yamlkt.Yaml
 import net.mamoe.yamlkt.YamlElement
 import net.mamoe.yamlkt.YamlNull
 
-class YamlEngine(override val engine: Yaml) : SerializationEngine<Yaml, YamlElement> {
+class YamlEngine(override val engine: Yaml = Yaml.Default) : SerializationEngine<Yaml, YamlElement> {
     override val elementNull: YamlElement = YamlNull
 
     override val elementSerializer: KSerializer<YamlElement> = YamlElement.serializer()

@@ -50,7 +50,7 @@ open class Konfig<E: Any>(
     }
 
     fun write() {
-        val content = serializationEngine.engine.encodeToString(
+        val content = serializationEngine.encodeToString(
             MapSerializer(String.serializer(), serializationEngine.elementSerializer), map
         )
 
@@ -60,7 +60,7 @@ open class Konfig<E: Any>(
     fun read(): Map<String, E> {
         val content = file.readText()
 
-        return serializationEngine.engine.decodeFromString(
+        return serializationEngine.decodeFromString(
             MapSerializer(String.serializer(), serializationEngine.elementSerializer), content
         )
     }
