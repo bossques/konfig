@@ -11,9 +11,9 @@ sealed class DelegatedConfigProperty<T: E?, E: Any> {
     abstract val serializer: KSerializer<E>
     abstract val default: JsonElement
 
-    abstract operator fun getValue(konfig: Konfig, property: KProperty<*>): T
+    abstract operator fun getValue(config: Configurable, property: KProperty<*>): T
 
-    abstract operator fun setValue(konfig: Konfig, property: KProperty<*>, value: T)
+    abstract operator fun setValue(config: Configurable, property: KProperty<*>, value: T)
 }
 
 class RequiredConfigProperty<T: Any>(
@@ -22,16 +22,16 @@ class RequiredConfigProperty<T: Any>(
 ): DelegatedConfigProperty<T, T>() {
     constructor(serializer: KSerializer<T>, default: T): this(serializer, Json.encodeToJsonElement(serializer, default))
 
-    override fun getValue(konfig: Konfig, property: KProperty<*>): T {
+    override fun getValue(config: Configurable, property: KProperty<*>): T {
         val propName = property.getSerialName()
-        val jsonElement = konfig.map[propName]
+        val jsonElement = config.map[propName]
             ?: throw ConfigPropertyMissingException("Config value '$propName' is not present")
         return Json.decodeFromJsonElement(serializer, jsonElement)
     }
 
-    override fun setValue(konfig: Konfig, property: KProperty<*>, value: T) {
+    override fun setValue(config: Configurable, property: KProperty<*>, value: T) {
         val jsonElement = Json.encodeToJsonElement(serializer, value)
-        konfig.map[property.getSerialName()] = jsonElement
+        config.map[property.getSerialName()] = jsonElement
     }
 }
 
@@ -41,15 +41,15 @@ class DefaultingConfigProperty<T: Any>(
 ): DelegatedConfigProperty<T, T>() {
     constructor(serializer: KSerializer<T>, default: T): this(serializer, Json.encodeToJsonElement(serializer, default))
 
-    override fun getValue(konfig: Konfig, property: KProperty<*>): T {
+    override fun getValue(config: Configurable, property: KProperty<*>): T {
         val propName = property.getSerialName()
-        val jsonElement = konfig.map.getOrPut(propName, ::default)
+        val jsonElement = config.map.getOrPut(propName, ::default)
         return Json.decodeFromJsonElement(serializer, jsonElement)
     }
 
-    override fun setValue(konfig: Konfig, property: KProperty<*>, value: T) {
+    override fun setValue(config: Configurable, property: KProperty<*>, value: T) {
         val jsonElement = Json.encodeToJsonElement(serializer, value)
-        konfig.map[property.getSerialName()] = jsonElement
+        config.map[property.getSerialName()] = jsonElement
     }
 }
 
@@ -63,15 +63,15 @@ class OptionalConfigProperty<T: E?, E: Any>(
     )
 
     @Suppress("UNCHECKED_CAST")
-    override fun getValue(konfig: Konfig, property: KProperty<*>): T {
+    override fun getValue(config: Configurable, property: KProperty<*>): T {
         val propName = property.getSerialName()
-        val jsonElement = konfig.map.getOrPut(propName, ::default)
+        val jsonElement = config.map.getOrPut(propName, ::default)
 
         return (if(jsonElement is JsonNull) null else Json.decodeFromJsonElement(serializer, jsonElement)) as T
     }
 
-    override fun setValue(konfig: Konfig, property: KProperty<*>, value: T) {
+        override fun setValue(config: Configurable, property: KProperty<*>, value: T) {
         val jsonElement = if(value == null) JsonNull else Json.encodeToJsonElement(serializer, value)
-        konfig.map[property.getSerialName()] = jsonElement
+        config.map[property.getSerialName()] = jsonElement
     }
 }

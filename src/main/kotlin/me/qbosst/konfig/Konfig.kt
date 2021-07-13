@@ -1,24 +1,19 @@
-@file:OptIn(InternalSerializationApi::class)
-
 package me.qbosst.konfig
 
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import me.qbosst.konfig.util.ConfigDefaults
 import me.qbosst.konfig.util.getSerialName
 import java.io.File
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
-open class Konfig(path: String) {
+open class Konfig(path: String): Configurable() {
     init {
         require(path.endsWith(".json")) { "Path must point to a json file!" }
     }
 
-    internal lateinit var map: MutableMap<String, JsonElement>
     private val file: File = File(path)
     private var isInitialised: Boolean = false
 
@@ -82,47 +77,5 @@ open class Konfig(path: String) {
             throw ConfigPropertiesMissingException(invalid)
         }
     }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun getConfigProperties() = this::class.memberProperties.mapNotNull {
-        val prop = it as KProperty1<Konfig, *>
-        prop.isAccessible = true
-        val delegate = prop.getDelegate(this) as? DelegatedConfigProperty<out Any?, out Any> ?: return@mapNotNull null
-        prop.isAccessible = false
-
-        return@mapNotNull prop to delegate
-    }
-
-    private fun getProperty(name: String) = this::class.memberProperties.firstOrNull { it.getSerialName() == name }
 }
-
-inline fun <reified T: Any> Konfig.required(
-    default: T = ConfigDefaults[T::class],
-    serializer: KSerializer<T> = T::class.serializer()
-): RequiredConfigProperty<T> = RequiredConfigProperty(serializer, default)
-
-inline fun <reified T: Any> Konfig.required(
-    default: JsonElement,
-    serializer: KSerializer<T> = T::class.serializer()
-): RequiredConfigProperty<T> = RequiredConfigProperty(serializer, default)
-
-inline fun <reified T: Any> Konfig.defaulting(
-    default: T,
-    serializer: KSerializer<T> = T::class.serializer()
-): DefaultingConfigProperty<T> = DefaultingConfigProperty(serializer, default)
-
-inline fun <reified T: Any> Konfig.defaulting(
-    default: JsonElement,
-    serializer: KSerializer<T> = T::class.serializer()
-): DefaultingConfigProperty<T> = DefaultingConfigProperty(serializer, default)
-
-inline fun <reified T: Any> Konfig.optional(
-    default: T? = null,
-    serializer: KSerializer<T> = T::class.serializer()
-): OptionalConfigProperty<T?, T> = OptionalConfigProperty(serializer, default)
-
-inline fun <reified T: Any> Konfig.optional(
-    default: JsonElement,
-    serializer: KSerializer<T> = T::class.serializer()
-): OptionalConfigProperty<T?, T> = OptionalConfigProperty(serializer, default)
 
