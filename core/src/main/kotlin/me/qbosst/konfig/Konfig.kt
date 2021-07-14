@@ -40,7 +40,7 @@ open class Konfig<E: Any>(
                 val prop = getProperty(propName)!! as KProperty1<Configurable<*>, *>
 
                 prop.isAccessible = true
-                val delegate = prop.getDelegate(this) as DelegatedConfigProperty<out Any?, out Any, *, E, *>
+                val delegate = prop.getDelegate(this) as DelegatedConfigProperty<out Any, out Any?, *, E>
                 prop.isAccessible = false
                 map[propName] = delegate.default
             }
@@ -70,7 +70,7 @@ open class Konfig<E: Any>(
 
         val invalid = mutableListOf<String>()
         for((prop, delegate) in getConfigProperties()) {
-            if (delegate !is RequiredConfigProperty<out Any, *, E, *>) continue
+            if (delegate !is RequiredConfigProperty<out Any, *, E>) continue
 
             val propName = prop.getSerialName()
 

@@ -18,7 +18,8 @@ abstract class Configurable<E: Any> {
     internal fun getConfigProperties() = this::class.memberProperties.mapNotNull {
         val prop = it as KProperty1<Configurable<E>, *>
         prop.isAccessible = true
-        val delegate = prop.getDelegate(this) as? DelegatedConfigProperty<out Any?, out Any, *, E, SerializationEngine<*, E>> ?: return@mapNotNull null
+        val delegate = prop.getDelegate(this) as? DelegatedConfigProperty<out Any, out Any?, *, E>
+            ?: return@mapNotNull null
         prop.isAccessible = false
 
         return@mapNotNull prop to delegate
@@ -30,33 +31,33 @@ abstract class Configurable<E: Any> {
 inline fun <reified T: Any, E: Any> Configurable<E>.required(
     default: T = ConfigDefaults[T::class],
     serializer: KSerializer<T> = serializer()
-): RequiredConfigProperty<T, *, E, *> = RequiredConfigProperty(default, serializer, serializationEngine)
+): RequiredConfigProperty<T, *, E> = RequiredConfigProperty(default, serializer, serializationEngine)
 
 @JvmName("requiredElement")
 inline fun <reified T: Any, E: Any> Configurable<E>.required(
     default: E,
     serializer: KSerializer<T> = serializer()
-): RequiredConfigProperty<T, *, E, *> = RequiredConfigProperty(serializer, default, serializationEngine)
+): RequiredConfigProperty<T, *, E> = RequiredConfigProperty(serializer, default, serializationEngine)
 
 inline fun <reified T: Any, E: Any> Configurable<E>.defaulting(
     default: T,
     serializer: KSerializer<T> = serializer()
-): DefaultingConfigProperty<T, *, E, *> = DefaultingConfigProperty(default, serializer, serializationEngine)
+): DefaultingConfigProperty<T, *, E> = DefaultingConfigProperty(default, serializer, serializationEngine)
 
 @JvmName("defaultingElement")
 inline fun <reified T: Any, E: Any> Configurable<E>.defaulting(
     default: E,
     serializer: KSerializer<T> = serializer()
-): DefaultingConfigProperty<T, *, E, *> = DefaultingConfigProperty(serializer, default, serializationEngine)
+): DefaultingConfigProperty<T, *, E> = DefaultingConfigProperty(serializer, default, serializationEngine)
 
 inline fun <reified T: Any, E: Any> Configurable<E>.optional(
     default: T? = null,
     serializer: KSerializer<T> = serializer()
-): OptionalConfigProperty<T?, T, *, E, *> = OptionalConfigProperty(default, serializer, serializationEngine)
+): OptionalConfigProperty<T, T?, *, E> = OptionalConfigProperty(default, serializer, serializationEngine)
 
 @JvmName("optionalElement")
 inline fun <reified T: Any, E: Any> Configurable<E>.optional(
     default: E,
     serializer: KSerializer<T> = serializer()
-): OptionalConfigProperty<T?, T, *, E, *> = OptionalConfigProperty(serializer, default, serializationEngine)
+): OptionalConfigProperty<T, T?, *, E> = OptionalConfigProperty(serializer, default, serializationEngine)
 

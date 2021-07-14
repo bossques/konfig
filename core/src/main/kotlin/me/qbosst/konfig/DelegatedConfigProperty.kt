@@ -6,7 +6,7 @@ import me.qbosst.konfig.engine.SerializationEngine
 import me.qbosst.konfig.util.getSerialName
 import kotlin.reflect.KProperty
 
-sealed class DelegatedConfigProperty<NULLABLE_ARG: ARG?, ARG: Any, FORMAT: StringFormat, ELEMENT: Any, ENGINE: SerializationEngine<FORMAT, ELEMENT>> {
+sealed class DelegatedConfigProperty<ARG: Any, NULLABLE_ARG: ARG?, FORMAT: StringFormat, ELEMENT: Any> {
     abstract val serializer: KSerializer<ARG>
     abstract val default: ELEMENT
     abstract val engine: SerializationEngine<FORMAT, ELEMENT>
@@ -16,11 +16,11 @@ sealed class DelegatedConfigProperty<NULLABLE_ARG: ARG?, ARG: Any, FORMAT: Strin
     abstract operator fun setValue(config: Configurable<ELEMENT>, property: KProperty<*>, value: NULLABLE_ARG)
 }
 
-class RequiredConfigProperty<ARG: Any, FORMAT: StringFormat, ELEMENT: Any, ENGINE: SerializationEngine<FORMAT, ELEMENT>>(
+class RequiredConfigProperty<ARG: Any, FORMAT: StringFormat, ELEMENT: Any>(
     override val serializer: KSerializer<ARG>,
     override val default: ELEMENT,
     override val engine: SerializationEngine<FORMAT, ELEMENT>
-): DelegatedConfigProperty<ARG, ARG, FORMAT, ELEMENT, ENGINE>() {
+): DelegatedConfigProperty<ARG, ARG, FORMAT, ELEMENT>() {
 
     constructor(
         default: ARG,
@@ -45,11 +45,11 @@ class RequiredConfigProperty<ARG: Any, FORMAT: StringFormat, ELEMENT: Any, ENGIN
     }
 }
 
-class DefaultingConfigProperty<ARG: Any, FORMAT: StringFormat, ELEMENT: Any, ENGINE: SerializationEngine<FORMAT, ELEMENT>>(
+class DefaultingConfigProperty<ARG: Any, FORMAT: StringFormat, ELEMENT: Any>(
     override val serializer: KSerializer<ARG>,
     override val default: ELEMENT,
     override val engine: SerializationEngine<FORMAT, ELEMENT>
-): DelegatedConfigProperty<ARG, ARG, FORMAT, ELEMENT, ENGINE>() {
+): DelegatedConfigProperty<ARG, ARG, FORMAT, ELEMENT>() {
 
     constructor(
         default: ARG,
@@ -73,11 +73,11 @@ class DefaultingConfigProperty<ARG: Any, FORMAT: StringFormat, ELEMENT: Any, ENG
     }
 }
 
-class OptionalConfigProperty<NULLABLE_ARG: ARG?, ARG: Any, FORMAT: StringFormat, ELEMENT: Any, ENGINE: SerializationEngine<FORMAT, ELEMENT>>(
+class OptionalConfigProperty<ARG: Any, NULLABLE_ARG: ARG?, FORMAT: StringFormat, ELEMENT: Any>(
     override val serializer: KSerializer<ARG>,
     override val default: ELEMENT,
     override val engine: SerializationEngine<FORMAT, ELEMENT>
-): DelegatedConfigProperty<NULLABLE_ARG, ARG, FORMAT, ELEMENT, ENGINE>() {
+): DelegatedConfigProperty<ARG, NULLABLE_ARG, FORMAT, ELEMENT>() {
     constructor(
         default: NULLABLE_ARG,
         serializer: KSerializer<ARG>,
