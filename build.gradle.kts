@@ -11,7 +11,7 @@ repositories {
 val projectArtifactId = "konfig"
 val projectVersion = "1.0.0"
 val projectGroup = "io.github.qbosst"
-val projectGithubUrl = "https://github.com/qbosst/Konfig"
+val projectGithubUrl = "https://github.com/qbosst/$projectArtifactId"
 
 group = projectGroup
 version = projectVersion
@@ -75,8 +75,8 @@ subprojects {
                     }
 
                     scm {
-                        connection.set("scm:git:git://github.com/qbosst/Konfig.git")
-                        developerConnection.set("scm:git:ssh://github.com:qbosst/Konfig.git")
+                        connection.set("scm:git:git://github.com/qbosst/$${projectArtifactId}.git")
+                        developerConnection.set("scm:git:ssh://github.com:qbosst/${projectArtifactId}.git")
                         url.set("$projectGithubUrl/tree/master")
                     }
                 }
