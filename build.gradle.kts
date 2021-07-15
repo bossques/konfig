@@ -50,7 +50,7 @@ subprojects {
                 artifact(sourcesJar)
                 artifact(javadocJar)
 
-                artifactId = projectArtifactId
+                artifactId = "${projectArtifactId}-${project.name}"
                 groupId = project.group as String
                 version = project.version as String
 
@@ -60,8 +60,10 @@ subprojects {
                     url.set(projectGithubUrl)
 
                     licenses {
-                        name.set("MIT")
-                        url.set("https://opensource.org/licenses/MIT")
+                        license {
+                            name.set("MIT")
+                            url.set("https://opensource.org/licenses/MIT")
+                        }
                     }
 
                     developers {
@@ -73,8 +75,8 @@ subprojects {
                     }
 
                     scm {
-                        connection.set("scm:git:git://github.com/qbosst/${projectArtifactId}.git")
-                        developerConnection.set("scm:git:ssh://github.com:qbosst/${projectArtifactId}.git")
+                        connection.set("scm:git:git://github.com/qbosst/Konfig.git")
+                        developerConnection.set("scm:git:ssh://github.com:qbosst/Konfig.git")
                         url.set("$projectGithubUrl/tree/master")
                     }
                 }
@@ -87,8 +89,8 @@ subprojects {
                 url = uri(if((version as String).endsWith("SNAPSHOT")) snapshotRepoUrl else releaseRepoUrl)
 
                 credentials {
-                    username = System.getenv("NEXUS_USER")
-                    password = System.getenv("NEXUS_PASSWORD")
+                    username = System.getenv("ossrhUsername")
+                    password = System.getenv("ossrhPassword")
                 }
             }
         }
