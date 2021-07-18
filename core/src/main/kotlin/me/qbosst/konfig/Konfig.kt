@@ -28,6 +28,11 @@ open class Konfig<E: Any>(
             return
         }
 
+        // write values
+        for((key, element) in read()) {
+            map[key] = element
+        }
+
         try { validate() } catch (e: ConfigPropertiesMissingException) {
             e.properties.forEach { property ->
                 val prop = this::class.memberProperties.first { it.getSerialName() == property } as KProperty1<Konfig<E>, *>
