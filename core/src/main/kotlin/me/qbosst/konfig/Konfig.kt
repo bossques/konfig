@@ -14,13 +14,14 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.isAccessible
 
 open class Konfig<E: Any>(
-    path: String,
     val serializationEngine: SerializationEngine<*, E>
 ) {
-    private val file: File = File(path)
+    private lateinit var file: File
     internal val map: MutableMap<String, E> = mutableMapOf()
 
-    fun init() {
+    fun init(path: String) {
+        file = File(path)
+
         if(!file.exists()) {
             file.createNewFile()
 
