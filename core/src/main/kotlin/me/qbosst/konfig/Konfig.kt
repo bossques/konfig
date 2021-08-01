@@ -3,88 +3,80 @@ package me.qbosst.konfig
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.serializer
 import me.qbosst.konfig.engine.SerializationEngine
-import me.qbosst.konfig.properties.*
-import me.qbosst.konfig.util.ConfigDefaults
-import me.qbosst.konfig.util.getSerialName
 import java.io.File
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.isAccessible
 
-open class Konfig<E: Any>(
-    val serializationEngine: SerializationEngine<*, E>
-) {
-    private lateinit var file: File
-    internal val map: MutableMap<String, E> = mutableMapOf()
+open class Konfig: Konfigurable() {
+    override lateinit var engine: SerializationEngine<*, *>
+    final override val parent: Konfigurable? get() = null
 
-    fun init(path: String) {
-        file = File(path)
+    lateinit var path: String
+    private val file: File get() = File(path)
+
+    fun init(path: String, engine: SerializationEngine<*, *>, failIfNotExists: Boolean = true) {
+        this.path = path
+        this.engine = engine
 
         if(!file.exists()) {
             file.createNewFile()
 
-            write()
-            return
-        }
-
-        // write values
-        for((key, element) in read()) {
-            map[key] = element
-        }
-
-        try { validate() } catch (e: ConfigPropertiesMissingException) {
-            e.properties.forEach { property ->
-                val prop = this::class.memberProperties.first { it.getSerialName() == property } as KProperty1<Konfig<E>, *>
-                prop.isAccessible = true
-                val delegate = prop.getDelegate(this) as ConfigProperty<out Any, out Any?, E>
-                prop.isAccessible = false
-                map[property] = delegate.encodeDefaultToElement(serializationEngine)
+            items.values.forEach { item ->
+                item.encodeDefault(engine)
             }
 
             write()
+
+            if(failIfNotExists) {
+                throw KonfigException("A config file has been generated at ${file.absolutePath}. Please fill it in.")
+            }
+        } else {
+            fun initKonfig(konfig: Konfigurable, map: Map<String, Any>): Boolean {
+                val missing = konfig.items.keys - map.keys
+
+                missing.forEach { key ->
+                    val item = konfig.items[key]!!
+                    item.encodeDefault(engine)
+                }
+
+                map.forEach { (key, element) ->
+                    val item = konfig.items[key]!!
+                    item.encoded = element
+
+                    if(item is KonfigObjectItem<out KonfigObject>) {
+                        val kObjMap = (engine as SerializationEngine<*, Any>).decodeFromElement(
+                            MapSerializer(String.serializer(), engine.elementSerializer),
+                            element
+                        )
+
+                        return initKonfig(item.kObj, kObjMap)
+                    }
+                }
+
+                return missing.isEmpty()
+            }
+
+            if(initKonfig(this, read())) {
+                write()
+            }
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun write() {
-        val content = serializationEngine.encodeToString(
-            MapSerializer(String.serializer(), serializationEngine.elementSerializer),
-            map
+        val content = engine.encodeToString(
+            MapSerializer(String.serializer(), engine.elementSerializer) as KSerializer<Map<String, Any>>,
+            items.mapValues { (_, item) -> item.getEncoded(engine) }
         )
 
         file.writeText(content)
     }
 
-    fun read(): Map<String, E> {
+    fun read(): Map<String, Any> {
         val content = file.readText()
 
-        return serializationEngine.decodeFromString(
-            MapSerializer(String.serializer(), serializationEngine.elementSerializer),
+        return engine.decodeFromString(
+            MapSerializer(String.serializer(), engine.elementSerializer),
             content
         )
     }
-
-    fun validate(against: Map<String, E> = read()) {
-        val invalid = map.filterNot { (key, _) -> key in against }.keys.toList()
-
-        if(invalid.isNotEmpty()) {
-            throw ConfigPropertiesMissingException(invalid)
-        }
-    }
 }
-
-inline fun <reified T: Any, E: Any> Konfig<E>.required(
-    default: T = ConfigDefaults[T::class],
-    serializer: KSerializer<T> = serializer()
-) = DelegatedProvider<T, E, RequiredConfigProperty<T, E>>(serializer, default) { RequiredConfigProperty(serializer, default) }
-
-inline fun <reified T: Any, E: Any> Konfig<E>.defaulting(
-    default: T = ConfigDefaults[T::class],
-    serializer: KSerializer<T> = serializer()
-) = DelegatedProvider<T, E, DefaultingConfigProperty<T, E>>(serializer, default) { DefaultingConfigProperty(serializer, default) }
-
-inline fun <reified T: Any, E: Any> Konfig<E>.optional(
-    default: T? = ConfigDefaults[T::class],
-    serializer: KSerializer<T> = serializer()
-) = DelegatedProvider<T, E, OptionalConfigProperty<T, E>>(serializer, default) { OptionalConfigProperty(serializer, default) }

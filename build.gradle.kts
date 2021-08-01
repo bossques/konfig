@@ -9,7 +9,7 @@ repositories {
 }
 
 val projectArtifactId = "konfig"
-val projectVersion = "1.0.1"
+val projectVersion = "1.0.2-SNAPSHOT"
 val projectGroup = "io.github.qbosst"
 val projectGithubUrl = "https://github.com/qbosst/$projectArtifactId"
 
