@@ -54,11 +54,8 @@ class KonfigObjectItem<T: KonfigObject>(override val name: String, var kObj: T) 
     override fun getEncoded(engine: SerializationEngine<*, *>): Any {
         return engine.encodeToElement(
             MapSerializer(String.serializer(), engine.elementSerializer) as KSerializer<Map<String, Any>>,
-            kObj.items.mapValues { (name, item) ->
-                item as KonfigProperty<Any?>
-                if(!item.isInitialised) item.encodeToElement(engine, kObj.items[name])
-
-                item.encoded
+            kObj.items.mapValues { (_, item) ->
+                item.getEncoded(engine)
             }
         )
     }

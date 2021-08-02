@@ -48,7 +48,7 @@ open class Konfig: Konfigurable() {
                             element
                         )
 
-                        return initKonfig(item.kObj, kObjMap)
+                        initKonfig(item.kObj, kObjMap)
                     }
                 }
 
