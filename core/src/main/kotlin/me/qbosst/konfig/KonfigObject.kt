@@ -4,6 +4,6 @@ import me.qbosst.konfig.engine.SerializationEngine
 
 open class KonfigObject(override val parent: Konfigurable): Konfigurable() {
 
-    override val engine: SerializationEngine<*, *> get() = parent.engine
+    final override val engine: SerializationEngine<*, *> get() = parent.engine
 
 }
