@@ -59,7 +59,7 @@ abstract class Konfigurable {
         @Suppress("UNCHECKED_CAST")
         fun <T: Any> getOrNull(kClass: KClass<T>): T? = defaults[kClass] as? T
 
-        operator fun <T: Any> get(kClass: KClass<T>): T = getOrNull(kClass).also { println(kClass) }
+        operator fun <T: Any> get(kClass: KClass<T>): T = getOrNull(kClass)
             ?: throw KonfigException("A default value for ${kClass::simpleName} has not been registered")
     }
 }
