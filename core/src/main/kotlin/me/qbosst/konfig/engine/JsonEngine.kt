@@ -5,7 +5,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 
-class JsonEngine(override val engine: Json = Json): SerializationEngine<Json, JsonElement> {
+class JsonEngine(override val engine: Json = Json { prettyPrint = true }): SerializationEngine<Json, JsonElement> {
     override val elementNull: JsonElement = JsonNull
 
     override val elementSerializer: KSerializer<JsonElement> = JsonElement.serializer()
